@@ -1,25 +1,109 @@
-.view { display: block; }
-.scaled { display: none; }
-th, td { border-bottom: 1px solid black; border-right: 1px solid black; }
-th { background: #def; }
-span { display: block; }
+@import url( https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap );
+@import url( https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed&display=swap );
 
-.view { display: block; }
-.scaled { display: none; }
-th, td { border-bottom: 1px solid black; border-right: 1px solid black; }
-th { background: #def; }
-span { display: block; }
+* {
+  font-family: 'IBM Plex Sans Condensed', 'Noto Sans JP';
+}
+.cpnl {
+  display: grid;
+  grid-template-columns: 20em 20em auto;
+  grid-template-rows: 3em;
+}
+.file { grid-column: 1 / 2; }
+
+.files {
+  grid-column: 2 / 3; grid-row: 1 / 5;
+  display: grid;
+  grid-template-columns: 20em;
+  grid-template-rows: 2em 1fr;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(100,100,100, .5);
+}
+
+.objects {
+  grid-column: 3 / 4;
+  grid-row: 1 / 5;
+  overflow-y: scroll;
+  height: 171px;
+}
+
+.lang { grid-column: 1 / 2; grid-row: 2 / 3; }
+.bright { grid-column: 1 / 2; grid-row: 3 / 4; }
+.scale { grid-column: 1 / 2; grid-row: 4 / 5; }
+
+.view {
+  display: block;
+}
+.scaled {
+  display: none;
+}
+body {
+  width: fit-content;
+}
+table {
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+}
+th, td {
+  width: 5.5em;
+  font-size: 9pt;
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+}
+.cell .nums, .cell .vals {
+  display: block;
+}
+#test-table td {
+  width: fit-content;
+}
+
+label, th {
+  background: #def;
+}
+.stat, progress {
+  display: block;
+  margin: .5em;
+}
+
+.file, .ps {
+  border-bottom: 1px solid black;
+}
 .ps {
   display: grid;
   grid-template-columns: 6em 10em 3em;
 }
-.ps label { grid-column: 1/2; }
-.ps select { grid-column: 2/3; }
-.ps input { grid-column: 2/3; }
-.ps span { grid-column: 3/4; }
+.file *, .ps * {
+  margin: .5em;
+}
+.ps label {
+  grid-column: 1/2;
+}
+.ps select {
+  grid-column: 2/3;
+}
+.ps input {
+  grid-column: 2/3;
+}
+.ps span {
+  grid-column: 3/4;
+}
 .vs {
   display: grid;
   grid-template-columns: 20em 10em;
 }
-.vs span { grid-column: 1/2; }
-.vs progress { grid-column: 2/3; }
+.vs span {
+  grid-column: 1/2;
+}
+.vs progress {
+  grid-column: 2/3;
+}
