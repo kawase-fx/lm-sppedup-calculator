@@ -10,11 +10,11 @@ const RECT_TABLE = [
 
 const CVT = {
   ' ': '', '\n': '', '。': '', '_': '', 'い': '',
-  '錦': '錬', '攻': '数', '呑': '間',  'ピードピード': 'ピード',
+  '錦': '錬', '攻': '数', '呑': '間',  '問': '間', 'ピードピード': 'ピード',
   '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
   '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9',
   '⑪': '11', '⑫': '12', '⑮': '15',
-  '⑲': '19', '⑳': '20',
+  '⑲': '19', '⑳': '20', '切': '分', '呂': '間',
   '所持数:': '', '.': '', ',': '', '修復': '',
 };
 GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
@@ -41,7 +41,7 @@ class MaquetteUtil {
 MaquetteUtil.init( globalThis );
 
 const tableRender = () => {
-  let j = [ TH( {}, [ '種類/単位' ] ) ];
+  let j = [ TH( { class: 'home' }, [ '種類/単位' ] ) ];
   UNITS.map( e => { j.push( TH( { id: e }, [ e ] ) ) } );
   j.push( TH( { id: '合計列' }, [ '合計' ] ) );
   let hdr = TR( { id: '列見出' }, [ j ] );
@@ -51,13 +51,18 @@ const tableRender = () => {
     UNITS.map( e => {
       let d = S[ row ]; let v = d ? S[ row ][ e ] : null;
       let w = [
-        SPAN( { id: `${ row }${ e }nums` }, [ `${ v ? v.nums : '-' }` ] ),
-        SPAN( { id: `${ row }${ e }vals` }, [ `${ v ? s2dhms( v.sec ).ja : '-' }` ] ),
+        SPAN( { id: `${ row }${ e }nums`, class: 'nums' }, [ `${ v ? v.nums : '-' }` ] ),
+        SPAN( { id: `${ row }${ e }vals`, class: 'vals' }, [ `${ v ? s2dhms( v.sec ).ja : '-' }` ] ),
       ];
-      c.push( TD( { id: `${ row }${ e }` }, [ w ] ) );
+      c.push( TD( { id: `${ row }${ e }`, class: 'cell' }, w ) );
     } );
+    let mt = S[ row ] ? S[ row ][ '合計' ].nums : '-';
     let st = S[ row ] ? s2dhms( S[ row ][ '合計' ].sec ).ja : '-';
-    c.push( TD( { id: `${ row }合計` }, [ st ] ) );
+    let wt = [
+      SPAN( { id: `${ row }nums`, class: 'nums' }, [ `${ mt }` ] ),
+      SPAN( { id: `${ row }vals`, class: 'vals' }, [ `${ st }` ] )
+    ];
+    c.push( TD( { id: `${ row }合計`, class: 'cell' }, wt ) );
     return TR( { id: row }, [ c ] );
   } );
   return TABLE( { id: 'mtx' }, [ hdr, rows ] );
@@ -121,6 +126,7 @@ const recogMain = async ( a, x ) => {
   let __c = i2c( a, x, SCALE );
   let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
   Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
+  rr = rr.replace( /[A-Za-z]/g, '' );
   T[ __c.id ] = rr;
   return rr;
 }
@@ -132,46 +138,59 @@ const imageToCanvas = async file => {
   } );
 }
 
-const recognize = async e => {
-  [ ... e.target.files ].map( async f => await imageToCanvas( f ) );
+const formatAndCalc = intervalTimerId => {
+  let l = Object.keys( T ).sort( ( a, b ) => a - b );
+  let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
+  if( s ) {
+    clearInterval( intervalTimerId );
 
-  await sleep( 2e3 );
-
-  let mj = setInterval( () => {
-    let l = Object.keys( T ).sort( ( a, b ) => a - b );
-    let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
-    if( s ) {
-      S = {}; let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
+    let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
+    for( let si = 0; si < ts.length; si += 2 ) {
       try {
-        for( let si = 0; si < ts.length; si += 2 ) {
-          let f = 1, kv = ts[ si ].split( 'スピードアップ' );
-          let v = kv[ 1 ].replace( /[分時間日]+/, '' );
-          if( kv[ 1 ].indexOf( '分' ) > -1 ) { f *= MI; kv[ 1 ] = kv[ 1 ].replace( /分/, 'm' ); }
-          if( kv[ 1 ].indexOf( '時間' ) > -1 ) { f *= HR; kv[ 1 ] = kv[ 1 ].replace( /時間/, 'h' ); }
-          if( kv[ 1 ].indexOf( '日' ) > -1 ) { f *= DY; kv[ 1 ] = kv[ 1 ].replace( /日/, 'd' ); }
+        let f = 1, kv = ts[ si ].split( 'スピードアップ' );
+        let v = kv[ 1 ].replace( /[分時間日]+/, '' );
+        if( kv[ 1 ].indexOf( '分' ) > -1 ) { f *= MI; kv[ 1 ] = kv[ 1 ].replace( /分/, 'm' ); }
+        if( kv[ 1 ].indexOf( '時間' ) > -1 ) { f *= HR; kv[ 1 ] = kv[ 1 ].replace( /時間/, 'h' ); }
+        if( kv[ 1 ].indexOf( '日' ) > -1 ) { f *= DY; kv[ 1 ] = kv[ 1 ].replace( /日/, 'd' ); }
 
-          if( kv[ 0 ] === '' ) kv[ 0 ] = '汎用';
-          if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
-          let sc = v * f * ts[ si + 1 ];
-          S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
-        }
+        if( kv[ 0 ] === '' ) kv[ 0 ] = '汎用';
+        if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
+        let sc = v * f * ts[ si + 1 ];
+        S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
       } catch( e ) {
         _i( 'stat' ).textContent = e.message;
-        clearInterval( mj );
-        return;
       }
-      Object.keys( S ).map( k => {
-        let kt = Object.keys( S[ k ] ).map( e => S[ k ][ e ].sec ).reduce( ( acc, cur ) => acc + cur );
-        S[ k ][ '合計' ] = { nums: 0, sec: kt };
-      } );
-
-      projector.renderNow();
-      JsonToHtmlTable( _i( 'test-table' ), T );
-
-      clearInterval( mj );
-      stat.textContent = 'done.'
     }
+    Object.keys( S ).map( k => {
+      let kt = Object.keys( S[ k ] ).filter( e => e !== '合計' ).map( e => S[ k ][ e ].sec ).reduce( ( acc, cur ) => acc + cur );
+      S[ k ][ '合計' ] = { nums: 0, sec: kt };
+    } );
+    [ '研究', '城壁', '治療', '訓練' ].map( k => {
+      if( S[ k ] ) {
+        let st = S[ k ][ '合計' ];
+        st.nums = s2dhms( st.sec + S[ '汎用' ][ '合計' ].sec ).ja;
+      }
+    } );
+    S[ '汎用' ][ '合計' ].nums = '-';
+
+    projector.renderNow();
+    JsonToHtmlTable( _i( 'test-table' ), T );
+
+    stat.textContent = 'done.'
+  }
+}
+
+const recognize = async e => {
+  let files = [ ... e.target.files ]; T = {};
+  files.map( async f => await imageToCanvas( f ) );
+  let fileList = _i( 'files' ); fileList.innerHTML = '';
+  files.map( e => {
+    let o = document.createElement( 'option' ); o.textContent = e.name; fileList.append( o );
   } );
+
+  await sleep( 1900 );
+  _i( 'image_zone' ).value = '';
+  let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
 
 const param = () => {
