@@ -6,7 +6,7 @@
 }
 .cpnl {
   display: grid;
-  grid-template-columns: 20em 20em auto;
+  grid-template-columns: 20em 20em 20em 11em;
   grid-template-rows: 3em;
 }
 .file { grid-column: 1 / 2; }
@@ -30,13 +30,15 @@
   background: rgba(100,100,100, .5);
 }
 
-.objects {
-  grid-column: 3 / 4;
+.log {
+  grid-column: 3 / 5;
   grid-row: 1 / 5;
-  overflow-y: scroll;
-  height: 171px;
+  height: 100%;
 }
-
+#log {
+  width: 100%;
+  height: 100%;
+}
 .lang { grid-column: 1 / 2; grid-row: 2 / 3; }
 .bright { grid-column: 1 / 2; grid-row: 3 / 4; }
 .scale { grid-column: 1 / 2; grid-row: 4 / 5; }
