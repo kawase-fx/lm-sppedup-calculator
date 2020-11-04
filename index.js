@@ -1,7 +1,7 @@
 let SCALE = 1, THRESHOLD = 120, LANG = 'jpn';
 const _d = document, MI = 60, HR = MI * 60, DY = HR * 24;
 const _i = v => _d.getElementById( v );
-const p = _i( 'p' ), stat = _i( 'stat' );
+const p = _i( 'p' ), stat = _i( 'stat' ), GALLERY = _i( 'gallery' );
 const RECT_TABLE = [
   [ 0.1875, 0.2704, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
   [ 0.1875, 0.4685, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
@@ -21,6 +21,21 @@ GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' 
 UNITS = [ '1m', '3m', '5m', '10m', '15m', '30m', '60m', '3h', '8h', '15h', '24h', '3d', '7d', '30d' ];
 
 globalThis.T = {}, globalThis.S = {};
+
+class Logger {
+  static props( n ) {
+    let st = ( s, l ) => { let p = l ? l : 2; return `${ '0'.repeat( p ) }${ s }`.slice( -p ); }
+    return {
+      YYYY: n.getFullYear(), YY: st( n.getFullYear() ), MM: st( n.getMonth() + 1 ), DD: st( n.getDate() ),
+      HR: st( n.getHours() ), MI: st( n.getMinutes() ), SC: st( n.getSeconds() ), MS: st( n.getMilliseconds(), 3 )
+    }
+  }
+  static get timeStamp() { let n = this.props( new Date() ); return `${ n.YYYY }/${ n.MM }/${ n.DD } ${ n.HR }:${ n.MI }:${ n.SC }.${ n.MS }`; }
+  static INF( m ) {
+    _i( 'log' ).textContent += `${ Logger.timeStamp }: ${ m }\n`;
+    _i( 'log' ).scrollTop = _i( 'log' ).scrollHeight;
+  }
+}
 
 class MaquetteUtil {
   static init( g ) {
@@ -75,7 +90,7 @@ const s2dhms = s => {
   r.d = Math.floor( s / DY ); m -= r.d * DY;
   r.h = Math.floor( m / HR ); m -= r.h * HR;
   r.m = Math.floor( m / MI ); m -= r.m * MI;
-  r.s = m; r.ja = `${ r.d }D${ r.h }:${ r.m }`;
+  r.s = m; r.ja = `${ r.d }`.padStart( 2, '0' ) + `d` + `${ r.h }`.padStart( 2, '0' ) + `h` + `${ r.m }`.padStart( 2, '0' ) + `m`;
   return r;
 }
 
@@ -94,18 +109,17 @@ const loadImage = i => { return new Promise( ( resolve, reject ) => {
 const jnl = m => {
   let pct = Big( m.progress ).mul( 100 ).toFixed( 2 );
   stat.textContent = `${ m.status }: ${ pct }%`; p.setAttribute( 'value', Number( pct ) );
+  if( pct === '100.00' ) Logger.INF( `${ m.status }` );
 }
 
-const i2c = ( a, x, scale ) => {
+const toCanvas = ( a, x, scale ) => {
   let __c = _d.createElement( 'canvas' );
   if( scale ) {
-    __c.id = `${ Date.now() }`;
-    __c.setAttribute( 'class', 'scaled' );
-    T[ __c.id ] = {};
+    __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'scaled' ); T[ __c.id ] = {};
   } else {
     __c.setAttribute( 'class', 'view' );
   }
-  _i( 'gallery' ).append( __c );
+  GALLERY.append( __c );
   let ctx = __c.getContext( '2d' );
   let [ sx, sy, sw, sh ] = [ a[ 0 ] * x.width, a[ 1 ] * x.height, a[ 2 ] * x.width, a[ 3 ] * x.height ];
   if( scale ) {
@@ -122,26 +136,11 @@ const i2c = ( a, x, scale ) => {
   return __c;
 }
 
-const recogMain = async ( a, x ) => {
-  let __c = i2c( a, x, SCALE );
-  let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
-  Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
-  rr = rr.replace( /[A-Za-z]/g, '' );
-  T[ __c.id ] = rr;
-  return rr;
-}
-
-const imageToCanvas = async file => {
-  let x = await loadImage( file );
-  RECT_TABLE.map( async a => {
-    let rr = await recogMain( a, x );
-  } );
-}
-
 const formatAndCalc = intervalTimerId => {
   let l = Object.keys( T ).sort( ( a, b ) => a - b );
   let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
   if( s ) {
+    Logger.INF( `complete prepare for set of text.` );
     clearInterval( intervalTimerId );
 
     let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
@@ -174,22 +173,47 @@ const formatAndCalc = intervalTimerId => {
     S[ '汎用' ][ '合計' ].nums = '-';
 
     projector.renderNow();
-    JsonToHtmlTable( _i( 'test-table' ), T );
-
     stat.textContent = 'done.'
+    Logger.INF( stat.textContent );
+
   }
 }
 
-const recognize = async e => {
+const recognize = async ( e ) => {
+  GALLERY.innerHTML = ''; let fileList = _i( 'files' ); fileList.innerHTML = '';
   let files = [ ... e.target.files ]; T = {};
-  files.map( async f => await imageToCanvas( f ) );
-  let fileList = _i( 'files' ); fileList.innerHTML = '';
   files.map( e => {
     let o = document.createElement( 'option' ); o.textContent = e.name; fileList.append( o );
   } );
+  Logger.INF( `${ files.length } file(s) selected.` );
 
-  await sleep( 1900 );
+  for( let fi = 0; fi < files.length; fi++ ) {
+    let x = await loadImage( files[ fi ] );
+    for( let ri = 0; ri < RECT_TABLE.length; ri++ ) {
+      let __c = toCanvas( RECT_TABLE[ ri ], x, SCALE );
+      let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
+      Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
+      rr = rr.replace( /[A-Za-z]/g, '' );
+      T[ __c.id ] = rr;
+      Logger.INF( `reformed text is ${ rr }.` );
+    }
+  }
+  // files.map( async f => {
+  //   // RECT_TABLE.map( async ( a, i ) => {
+  //   //   Logger.INF( `start processing rectangle ${ i }.` );
+  //   //   let x = await loadImage( f );
+  //   //   let __c = toCanvas( a, x, SCALE );
+  //   //   let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
+  //   //   Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
+  //   //   rr = rr.replace( /[A-Za-z]/g, '' );
+  //   //   T[ __c.id ] = rr;
+  //   //   Logger.INF( `reformed text is ${ rr }.` );
+  //   //   return rr;
+  //   // } );
+  // } );
+  await sleep( 400 );
   _i( 'image_zone' ).value = '';
+  Logger.INF( `monitoring...` );
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
 
