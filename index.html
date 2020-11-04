@@ -15,15 +15,22 @@
     <div><textarea id="output" rows="20" cols="60" style='font-size: 10pt;'></textarea></div>
     <div id='gallery'></div>
     <script>
-      const _d = document, LANG = 'jpn', THRESHOLD = 128, SCALE = 1, MI = 60, HR = MI * 60, DY = HR * 24;
+      const _d = document, LANG = 'jpn', THRESHOLD = 120, SCALE = 4, MI = 60, HR = MI * 60, DY = HR * 24;
       const _i = v => _d.getElementById( v );
       const imageZone = _i( 'image_zone' ), p = _i( 'p' ), stat = _i( 'stat' );
+      const RECT_TABLE = [
+        [ 0.1875, 0.2704, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
+        [ 0.1875, 0.4685, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
+        [ 0.1875, 0.6685, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
+      ];
+
       const CVT = {
-        ' ': '', '\n': '', '所持数:': '', '.': '', ',': '', '修復': '',
+        '。': '', '_': '', 'い': '', '攻': '数',
         '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
         '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9',
         '⑪': '11', '⑫': '12', '⑮': '15',
-        '⑲': '19', '⑳': '20'
+        '⑲': '19', '⑳': '20',
+        ' ': '', '\n': '', '所持数:': '', '.': '', ',': '', '修復': '',
       };
       const GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
       const UNITS = [ '1分', '3分', '5分', '10分', '15分', '30分', '60分', '3時間', '8時間', '15時間', '24時間', '3日', '7日', '30日' ];
@@ -68,7 +75,8 @@
           __c.setAttribute( 'class', 'view' );
         }
         _i( 'gallery' ).append( __c );
-        let ctx = __c.getContext( '2d' ), [ sx, sy, sw, sh ] = [ a[ 0 ], a[ 1 ], a[ 2 ], a[ 3 ] ];
+        let ctx = __c.getContext( '2d' );
+        let [ sx, sy, sw, sh ] = [ a[ 0 ] * x.width, a[ 1 ] * x.height, a[ 2 ] * x.width, a[ 3 ] * x.height ];
         if( scale ) {
           __c.width = sw * scale, __c.height = sh * scale; ctx.scale( scale, scale );
         }
@@ -93,11 +101,7 @@
 
       const imageToCanvas = async file => {
         let x = await loadImage( file );
-        [
-          [ 360, 292, 500, 40, 1 ], [ 192, 424, 180, 40, 1 ],
-          [ 360, 506, 500, 40, 2 ], [ 192, 640, 180, 40, 2 ],
-          [ 360, 722, 500, 40, 3 ], [ 192, 856, 180, 40, 3 ],
-        ].map( async a => {
+        RECT_TABLE.map( async a => {
           let rr = await recogMain( a, x );
         } );
       }
