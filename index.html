@@ -1,7 +1,6 @@
 <html lang="ja">
   <head>
     <link rel="stylesheet" type="text/css" href="index.css">
-    <script src="jsonToHtmlTable.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/maquette/3.3.7/maquette.umd.min.js"
       integrity="sha512-Rhh3RRGvOO6cHwq7//Kq9JIeG19Yi+uRWqO6NdlGok5Gw1k7xkw0apqAUZ+kmcPL4TdgKZTp6zY3gpys/CSfmw=="
       crossorigin="anonymous">
@@ -13,7 +12,7 @@
     <div class='cpnl'>
       <div class='file'><input type="file" id="image_zone" multiple="multiple" accept="image/*"></div>
       <div class='files'><label for='files'>使用ファイル名</label><select id='files' size='5'></select></div>
-      <div class='objects'><table id="test-table"></table></div>
+      <div class='log'><textarea id="log"></textarea></div>
       <div class='lang ps'><label for='lang'>言語</label><select id='lang'><option value='jpn' selected>jpn</option><option value='eng'>eng</option></select></div>
       <div class='bright ps'><label for='bright'>二値化</label><input type="range" min="0" max="255" value="128" id="bright"><span id='bp'></span></div>
       <div class='scale ps'><label for='scale'>拡大倍率</label><input type="range" min="1" max="10" value="1" id="scale"><span id='sp'></span></div>
