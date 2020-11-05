@@ -150,7 +150,6 @@ const loadImage = i => { return new Promise( ( resolve, reject ) => {
 const jnl = m => {
   let pct = Big( m.progress ).mul( 100 ).toFixed( 2 );
   stat.textContent = `${ m.status }`; p.setAttribute( 'value', Number( pct ) );
-  // if( pct === '100.00' ) Logger.INF( `${ m.status }` );
 }
 
 const toCanvas = ( a, x, scale ) => {
@@ -204,7 +203,6 @@ const formatAndCalc = intervalTimerId => {
   let l = Object.keys( T ).sort( ( a, b ) => a - b );
   let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
   if( s ) {
-    Logger.INF( `complete prepare for set of text.` );
     clearInterval( intervalTimerId );
 
     let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
@@ -227,8 +225,6 @@ const formatAndCalc = intervalTimerId => {
     calc();
     stat.textContent = 'done.'
     alert( '読み取りが完了しました。' );
-    Logger.INF( stat.textContent );
-
   }
 }
 
@@ -245,25 +241,23 @@ const recognize = async ( e ) => {
       Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
       rr = rr.replace( /[A-Za-z]/g, '' );
       T[ __c.id ] = rr;
-      Logger.INF( `reformed text is ${ rr }.` );
+      Logger.INF( rr );
     }
   }
   // files.map( async f => {
   //   // RECT_TABLE.map( async ( a, i ) => {
-  //   //   Logger.INF( `start processing rectangle ${ i }.` );
   //   //   let x = await loadImage( f );
   //   //   let __c = toCanvas( a, x, SCALE );
   //   //   let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
   //   //   Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
   //   //   rr = rr.replace( /[A-Za-z]/g, '' );
   //   //   T[ __c.id ] = rr;
-  //   //   Logger.INF( `reformed text is ${ rr }.` );
+  //   //   Logger.INF( rr );
   //   //   return rr;
   //   // } );
   // } );
-  await sleep( 400 );
+  // await sleep( 400 );
   qs( '#image_zone' ).value = '';
-  Logger.INF( `monitoring...` );
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
 
