@@ -4,6 +4,8 @@
 
 ご利用はこちらから計画的に https://kawase-fx.github.io/lm-sppedup-calculator/
 
+![ダウンロード (1)](https://user-images.githubusercontent.com/29803517/98243594-81a9e680-1fb1-11eb-960c-59b2fb2bf351.png)
+
 ### 【推奨】スマホでは横画面で使ってください。
 
 ### 使い方１（画像から）
@@ -36,6 +38,7 @@
 
 ## ライセンスそのほか
 
+* 読み取り精度が悪い、スクショ面倒くさひ、などあるかと思います。ローモバに実装されないのがいけないと思います。
 * 現状のまま利用する限り無料です。組み入れやフォーク後の改変はお断りします。free for AS-IS. prohibit embeding, modify with fork.
 * プルリク（来るのかなｗ）歓迎。welcome to pull request.
 * このアプリはローモバアイテムの寄付などを受け付けております。give me item of lords mobile or BTC!!
