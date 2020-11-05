@@ -17,8 +17,8 @@
       <div class='file'><input type='file' id='image_zone' multiple='multiple' accept='image/*'></div>
       <div class='log'><textarea id='log'></textarea></div>
       <div class='lang ps'><label for='lang'>言語</label><select id='lang'><option value='jpn' selected>jpn</option><option value='eng'>eng</option></select></div>
-      <div class='bright ps'><label for='bright'>二値化</label><input type='range' min='0' max='255' value='128' id='bright'><span id='bp'></span></div>
       <div class='scale ps'><label for='scale'>拡大倍率</label><input type='range' min='1' max='10' value='1' id='scale'><span id='sp'></span></div>
+      <div class='burst ps'><label for='burst'>マルチ</label><b><input type='checkbox' id='burst'>複数同時読取</b><span id='bp'></span></div>
       <div class='stat vs'><span id='stat'>readied.</span><progress id='p' value='0' max='100'>0%</progress></div>
     </div>
     <div id='result'></div>
