@@ -23,7 +23,7 @@ label, th, #directInput {
 .bright { grid-column: 1 / 2; grid-row: 3 / 4; }
 .scale { grid-column: 1 / 2; grid-row: 4 / 5; }
 .stat { grid-column: 2 / 3; grid-row: 4 / 5; }
-#log { font-size: 8pt; width: 100%; height: 100%; background: #0003; }
+#log { font-size: 12pt; width: 100%; height: 100%; background: #0003; }
 #result { border: 2px groove #a85; }
 .cell .nums, .cell .vals { display: block; }
 #subtotal td { background: #fff3; }
