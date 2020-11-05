@@ -20,7 +20,8 @@ label, th, #directInput {
 .file { grid-column: 1 / 2; grid-row: 1 / 2; }
 .log { grid-column: 2 / 3; grid-row: 1 / 4; height: 100%; }
 .lang { grid-column: 1 / 2; grid-row: 2 / 3; }
-.bright { grid-column: 1 / 2; grid-row: 3 / 4; }
+.burst { grid-column: 1 / 2; grid-row: 3 / 4; }
+#burst { width: 1.5em; height: 1.5em; }
 .scale { grid-column: 1 / 2; grid-row: 4 / 5; }
 .stat { grid-column: 2 / 3; grid-row: 4 / 5; }
 #log { font-size: 12pt; width: 100%; height: 100%; background: #0003; }
