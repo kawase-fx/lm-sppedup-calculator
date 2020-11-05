@@ -150,7 +150,7 @@ const loadImage = i => { return new Promise( ( resolve, reject ) => {
 const jnl = m => {
   let pct = Big( m.progress ).mul( 100 ).toFixed( 2 );
   stat.textContent = `${ m.status }`; p.setAttribute( 'value', Number( pct ) );
-  if( pct === '100.00' ) Logger.INF( `${ m.status }` );
+  // if( pct === '100.00' ) Logger.INF( `${ m.status }` );
 }
 
 const toCanvas = ( a, x, scale ) => {
