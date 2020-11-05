@@ -1,41 +1,4 @@
-let SCALE = 1, THRESHOLD = 120, LANG = 'jpn';
-const _d = document, MI = 60, HR = MI * 60, DY = HR * 24;
-const _i = v => _d.getElementById( v );
-const p = _i( 'p' ), stat = _i( 'stat' ), GALLERY = _i( 'gallery' );
-const RECT_TABLE = [
-  [ 0.1875, 0.2704, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
-  [ 0.1875, 0.4685, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
-  [ 0.1875, 0.6685, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
-];
-
-const CVT = {
-  ' ': '', '\n': '', '。': '', '_': '', 'い': '',
-  '錦': '錬', '攻': '数', '呑': '間',  '問': '間', 'ピードピード': 'ピード',
-  '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
-  '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9',
-  '⑪': '11', '⑫': '12', '⑮': '15',
-  '⑲': '19', '⑳': '20', '切': '分', '呂': '間',
-  '所持数:': '', '.': '', ',': '', '修復': '',
-};
-GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
-UNITS = [ '1m', '3m', '5m', '10m', '15m', '30m', '60m', '3h', '8h', '15h', '24h', '3d', '7d', '30d' ];
-
-globalThis.T = {}, globalThis.S = {};
-
-class Logger {
-  static props( n ) {
-    let st = ( s, l ) => { let p = l ? l : 2; return `${ '0'.repeat( p ) }${ s }`.slice( -p ); }
-    return {
-      YYYY: n.getFullYear(), YY: st( n.getFullYear() ), MM: st( n.getMonth() + 1 ), DD: st( n.getDate() ),
-      HR: st( n.getHours() ), MI: st( n.getMinutes() ), SC: st( n.getSeconds() ), MS: st( n.getMilliseconds(), 3 )
-    }
-  }
-  static get timeStamp() { let n = this.props( new Date() ); return `${ n.YYYY }/${ n.MM }/${ n.DD } ${ n.HR }:${ n.MI }:${ n.SC }.${ n.MS }`; }
-  static INF( m ) {
-    _i( 'log' ).textContent += `${ Logger.timeStamp }: ${ m }\n`;
-    _i( 'log' ).scrollTop = _i( 'log' ).scrollHeight;
-  }
-}
+class Logger { static INF( m ) { qs( '#log' ).textContent += `${ m }\n`; qs( '#log' ).scrollTop = qs( '#log' ).scrollHeight; } }
 
 class MaquetteUtil {
   static init( g ) {
@@ -55,32 +18,111 @@ class MaquetteUtil {
 }
 MaquetteUtil.init( globalThis );
 
+let SCALE = 1, THRESHOLD = 120, LANG = 'jpn';
+const _d = document, MI = 60, HR = MI * 60, DY = HR * 24;
+const p = qs( '#p' ), stat = qs( '#stat' ), GALLERY = qs( '#gallery' );
+const RECT_TABLE = [
+  [ 0.1875, 0.2704, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
+  [ 0.1875, 0.4685, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
+  [ 0.1875, 0.6685, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
+];
+
+const CVT = {
+  ' ': '', '\n': '', '。': '', '_': '', 'い': '',
+  '錦': '錬', '攻': '数', '呑': '間',  '問': '間', 'ピードピード': 'ピード',
+  '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+  '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9',
+  '⑪': '11', '⑫': '12', '⑮': '15',
+  '⑲': '19', '⑳': '20', '切': '分', '呂': '間',
+  '所持数:': '', '.': '', ',': '', '修復': '',
+};
+GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
+UNITS = [ '1m', '3m', '5m', '10m', '15m', '30m', '60m', '3h', '8h', '15h', '24h', '3d', '7d', '30d' ];
+TOSEC = [ MI, MI * 3, MI * 5, MI * 10, MI * 15, MI * 30, MI, HR * 3, HR * 8, HR * 15, DY, DY * 3, DY * 7, DY * 30 ];
+
+globalThis.T = {}, globalThis.S = {};
+
+const tableTouch = e => {
+  let parent = e.target.parentElement; let g = parent.dataset.genre, u = parent.dataset.unit;
+  if( u === '合計' ) return;
+
+  let ne = qs( '#numEdit' ), de = qs( '#dhmEdit' ), di = qs( '#directInput' );
+  ne.classList.remove( 'hidden' ); de.classList.remove( 'hidden' );
+  qs( '#editFor #genre' ).textContent = g;
+  qs( '#editFor #unit' ).textContent = u;
+  let dhm = !S[ g ] ? null : S[ g ][ u ] ? s2dhms( S[ g ][ u ].sec ) : null;
+  qs( '#de' ).value = ( dhm === null ) ? 0 : dhm.d;
+  qs( '#he' ).value = ( dhm === null ) ? 0 : dhm.h;
+  qs( '#me' ).value = ( dhm === null ) ? 0 : dhm.m;
+  if( u === '合計' ) {
+    ne.classList.add( 'hidden' );
+  } else {
+    qs( '#ne' ).value = S[ g ] ? S[ g ][ u ] ? S[ g ][ u ].nums : 0 : 0;
+    de.classList.add( 'hidden' );
+  }
+  di.dataset.genre = g, di.dataset.unit = u;
+  di.classList.remove( 'hidden' );
+}
+
+const editOk = e => {
+  let di = qs( '#directInput' ); let g = di.dataset.genre, u = di.dataset.unit;
+  if( u === '合計' ) {
+    let [ d, h, m ] = [ qs( '#de' ).value, qs( '#he' ).value, qs( '#me' ).value ];
+    if( !S[ g ] ) S[ g ] = {};
+    if( !S[ g ][ u ] ) S[ g ][ u ] = {};
+    S[ g ][ u ].sec = d * DY + h * HR + m * MI;
+  } else {
+    if( !S[ g ] ) S[ g ] = {};
+    if( !S[ g ][ u ] ) S[ g ][ u ] = {};
+    S[ g ][ u ].nums = `${ qs( '#ne' ).value }`;
+    S[ g ][ u ].sec = TOSEC[ UNITS.indexOf( u ) ] * S[ g ][ u ].nums;
+  }
+  di.classList.add( 'hidden' );
+  calc();
+}
+const editCancel = e => {
+  qs( '#directInput' ).classList.add( 'hidden' );
+}
+const editDelete = e => {
+  let di = qs( '#directInput' ); let g = di.dataset.genre, u = di.dataset.unit;
+  if( confirm( '削除していいですか？' ) ) {
+    delete S[ g ][ u ];
+    qs( '#directInput' ).classList.add( 'hidden' );
+    calc();
+  }
+}
+
 const tableRender = () => {
   let j = [ TH( { class: 'home' }, [ '種類/単位' ] ) ];
-  UNITS.map( e => { j.push( TH( { id: e }, [ e ] ) ) } );
-  j.push( TH( { id: '合計列' }, [ '合計' ] ) );
+  GENRES.map( e => { j.push( TH( { id: e }, [ e ] ) ) } );
   let hdr = TR( { id: '列見出' }, [ j ] );
 
-  let rows = GENRES.map( row => {
-    let c = [ TH( {}, [ row ] ) ];
-    UNITS.map( e => {
+  let rows = UNITS.map( e => {
+    let c = [ TH( {}, [ e ] ) ];
+    GENRES.map( row => {
       let d = S[ row ]; let v = d ? S[ row ][ e ] : null;
       let w = [
         SPAN( { id: `${ row }${ e }nums`, class: 'nums' }, [ `${ v ? v.nums : '-' }` ] ),
         SPAN( { id: `${ row }${ e }vals`, class: 'vals' }, [ `${ v ? s2dhms( v.sec ).ja : '-' }` ] ),
       ];
-      c.push( TD( { id: `${ row }${ e }`, class: 'cell' }, w ) );
+      c.push( TD( { id: `${ row }${ e }`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': `${ e }` }, w ) );
     } );
+    return TR( { id: e }, [ c ] );
+  } );
+
+  let ft = [ TH( { id: '合計列' }, [ '合計' ] ) ];
+  GENRES.map( row => {
     let mt = S[ row ] ? S[ row ][ '合計' ].nums : '-';
     let st = S[ row ] ? s2dhms( S[ row ][ '合計' ].sec ).ja : '-';
     let wt = [
       SPAN( { id: `${ row }nums`, class: 'nums' }, [ `${ mt }` ] ),
       SPAN( { id: `${ row }vals`, class: 'vals' }, [ `${ st }` ] )
     ];
-    c.push( TD( { id: `${ row }合計`, class: 'cell' }, wt ) );
-    return TR( { id: row }, [ c ] );
+    ft.push( TD( { id: `${ row }合計`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': `合計` }, wt ) );
   } );
-  return TABLE( { id: 'mtx' }, [ hdr, rows ] );
+  ft = TR( { id: 'subtotal' }, [ ft ] );
+
+  return TABLE( { id: 'mtx', onclick: tableTouch }, [ hdr, ft, rows ] );
 }
 
 const sleep = msec => new Promise( resolve => setTimeout( resolve, msec ) );
@@ -108,14 +150,14 @@ const loadImage = i => { return new Promise( ( resolve, reject ) => {
 
 const jnl = m => {
   let pct = Big( m.progress ).mul( 100 ).toFixed( 2 );
-  stat.textContent = `${ m.status }: ${ pct }%`; p.setAttribute( 'value', Number( pct ) );
+  stat.textContent = `${ m.status }`; p.setAttribute( 'value', Number( pct ) );
   if( pct === '100.00' ) Logger.INF( `${ m.status }` );
 }
 
 const toCanvas = ( a, x, scale ) => {
   let __c = _d.createElement( 'canvas' );
   if( scale ) {
-    __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'scaled' ); T[ __c.id ] = {};
+    __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'hidden' ); T[ __c.id ] = {};
   } else {
     __c.setAttribute( 'class', 'view' );
   }
@@ -134,6 +176,29 @@ const toCanvas = ( a, x, scale ) => {
   }
   ctx.putImageData( src, 0, 0 );
   return __c;
+}
+
+const calc = () => {
+  Object.keys( S ).map( k => {
+    let st, kt = Object.keys( S[ k ] ).filter( e => e !== '合計' );
+    if( kt.length > 0 ) {
+      st = kt.map( e => S[ k ][ e ].sec ).reduce( ( acc, cur ) => acc + cur );
+      S[ k ][ '合計' ] = { nums: 0, sec: st };
+    } else {
+      delete S[ k ];
+    }
+  } );
+
+  if( S[ '汎用' ] ) {
+    [ '研究', '城壁', '治療', '訓練' ].map( k => {
+      if( S[ k ] ) {
+        let st = S[ k ][ '合計' ];
+        st.nums = s2dhms( st.sec + S[ '汎用' ][ '合計' ].sec ).ja;
+      }
+    } );
+    S[ '汎用' ][ '合計' ].nums = '-';
+  }
+  projector.renderNow();
 }
 
 const formatAndCalc = intervalTimerId => {
@@ -157,35 +222,21 @@ const formatAndCalc = intervalTimerId => {
         let sc = v * f * ts[ si + 1 ];
         S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
       } catch( e ) {
-        _i( 'stat' ).textContent = e.message;
+        qs( '#stat' ).textContent = e.message;
       }
     }
-    Object.keys( S ).map( k => {
-      let kt = Object.keys( S[ k ] ).filter( e => e !== '合計' ).map( e => S[ k ][ e ].sec ).reduce( ( acc, cur ) => acc + cur );
-      S[ k ][ '合計' ] = { nums: 0, sec: kt };
-    } );
-    [ '研究', '城壁', '治療', '訓練' ].map( k => {
-      if( S[ k ] ) {
-        let st = S[ k ][ '合計' ];
-        st.nums = s2dhms( st.sec + S[ '汎用' ][ '合計' ].sec ).ja;
-      }
-    } );
-    S[ '汎用' ][ '合計' ].nums = '-';
-
-    projector.renderNow();
+    calc();
     stat.textContent = 'done.'
+    alert( '読み取りが完了しました。' );
     Logger.INF( stat.textContent );
 
   }
 }
 
 const recognize = async ( e ) => {
-  GALLERY.innerHTML = ''; let fileList = _i( 'files' ); fileList.innerHTML = '';
-  let files = [ ... e.target.files ]; T = {};
-  files.map( e => {
-    let o = document.createElement( 'option' ); o.textContent = e.name; fileList.append( o );
-  } );
-  Logger.INF( `${ files.length } file(s) selected.` );
+  GALLERY.innerHTML = ''; let files = [ ... e.target.files ]; T = {};
+  files.map( e => Logger.INF( `file [${ e.name }] selected.` ) );
+  Logger.INF( `total ${ files.length } file(s) selected.` );
 
   for( let fi = 0; fi < files.length; fi++ ) {
     let x = await loadImage( files[ fi ] );
@@ -212,23 +263,27 @@ const recognize = async ( e ) => {
   //   // } );
   // } );
   await sleep( 400 );
-  _i( 'image_zone' ).value = '';
+  qs( '#image_zone' ).value = '';
   Logger.INF( `monitoring...` );
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
 
 const param = () => {
-  LANG = _i( 'lang' ).value;
-  THRESHOLD = _i( 'bright' ).value; _i( 'bp' ).textContent = `[${ THRESHOLD }]`;
-  SCALE = _i( 'scale' ).value; _i( 'sp' ).textContent = `[${ SCALE }]`;
-  _i( 'stat' ).textContent = `言語:${ LANG } 二値化:${ THRESHOLD } 拡大倍率:${ SCALE }`;
+  LANG = qs( '#lang' ).value;
+  THRESHOLD = qs( '#bright' ).value; qs( '#bp' ).textContent = `[${ THRESHOLD }]`;
+  SCALE = qs( '#scale' ).value; qs( '#sp' ).textContent = `[${ SCALE }]`;
+  qs( '#stat' ).textContent = `言語:${ LANG } 二値化:${ THRESHOLD } 拡大倍率:${ SCALE }`;
 }
 
-_i( 'lang' ).addEventListener( 'change', param, false );
-_i( 'bright' ).addEventListener( 'change', param, false );
-_i( 'scale' ).addEventListener( 'change', param, false );
+qs( '#lang' ).addEventListener( 'change', param, false );
+qs( '#bright' ).addEventListener( 'change', param, false );
+qs( '#scale' ).addEventListener( 'change', param, false );
 
 param();
-_i( 'image_zone' ).addEventListener( 'change', recognize, false );
+qs( '#image_zone' ).addEventListener( 'change', recognize, false );
+
+qs( '#editOk' ).addEventListener( 'mouseup', editOk, false );
+qs( '#editCancel' ).addEventListener( 'mouseup', editCancel, false );
+qs( '#delete' ).addEventListener( 'mouseup', editDelete, false );
 
 projector = createProjector(); projector.append( qs( '#result' ), tableRender );
