@@ -126,12 +126,18 @@ const tableRender = () => {
 
 const sleep = msec => new Promise( resolve => setTimeout( resolve, msec ) );
 
-const s2dhms = s => {
-  let m = s, r = {};
+const zp = ( f, r, c ) => `${ f }`.padStart( c ? c : 2, 0 ) + r;
+
+const s2dhms = ( s, ms ) => {
+  let m = Number( !ms ? `${ s }` : `${ Math.floor( s / 1000 ) }` ), r = {};
   r.d = Math.floor( s / DY ); m -= r.d * DY;
   r.h = Math.floor( m / HR ); m -= r.h * HR;
   r.m = Math.floor( m / MI ); m -= r.m * MI;
-  r.s = m; r.ja = `${ r.d }`.padStart( 2, '0' ) + `d` + `${ r.h }`.padStart( 2, '0' ) + `h` + `${ r.m }`.padStart( 2, '0' ) + `m`;
+  r.s = m;
+  r.ja = zp( r.d, 'd' ); r.ja += zp( r.h, 'h' ); r.ja += zp( r.m, 'm' );
+
+  r.jb = zp( r.m, 'm' ); r.jb += zp( r.s, 's' );
+  if( ms ) r.jb += zp( s - m * 1000, 'ms' );
   return r;
 }
 
@@ -203,6 +209,8 @@ const formatAndCalc = intervalTimerId => {
   let l = Object.keys( T ).sort( ( a, b ) => a - b );
   let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
   if( s ) {
+    globalThis.endTime = Date.now();
+    Logger.INF( '処理時間: ' + s2dhms( endTime - startTime, true ).jb );
     clearInterval( intervalTimerId );
 
     let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
@@ -230,46 +238,46 @@ const formatAndCalc = intervalTimerId => {
 
 const recognize = async ( e ) => {
   GALLERY.innerHTML = ''; let files = [ ... e.target.files ]; T = {};
-  files.map( e => Logger.INF( `file [${ e.name }] selected.` ) );
-  Logger.INF( `total ${ files.length } file(s) selected.` );
-
-  for( let fi = 0; fi < files.length; fi++ ) {
-    let x = await loadImage( files[ fi ] );
-    for( let ri = 0; ri < RECT_TABLE.length; ri++ ) {
-      let __c = toCanvas( RECT_TABLE[ ri ], x, SCALE );
-      let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
-      Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
-      rr = rr.replace( /[A-Za-z]/g, '' );
-      T[ __c.id ] = rr;
-      Logger.INF( rr );
+  globalThis.startTime = Date.now();
+  if( !qs( '#burst' ).checked ) {
+    for( let fi = 0; fi < files.length; fi++ ) {
+      let x = await loadImage( files[ fi ] );
+      for( let ri = 0; ri < RECT_TABLE.length; ri++ ) {
+        let __c = toCanvas( RECT_TABLE[ ri ], x, SCALE );
+        let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
+        Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
+        rr = rr.replace( /[A-Za-z]/g, '' );
+        T[ __c.id ] = rr;
+        Logger.INF( rr );
+      }
     }
+  } else {
+    files.map( async f => {
+      RECT_TABLE.map( async ( a, i ) => {
+        let x = await loadImage( f );
+        let __c = toCanvas( a, x, SCALE );
+        let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
+        Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
+        rr = rr.replace( /[A-Za-z]/g, '' );
+        T[ __c.id ] = rr;
+        Logger.INF( rr );
+        return rr;
+      } );
+    } );
   }
-  // files.map( async f => {
-  //   // RECT_TABLE.map( async ( a, i ) => {
-  //   //   let x = await loadImage( f );
-  //   //   let __c = toCanvas( a, x, SCALE );
-  //   //   let rr = ( await Tesseract.recognize( __c, LANG, { logger: jnl } ) ).data.text;
-  //   //   Object.keys( CVT ).map( e => { rr = rr.split( e ).join( CVT[ e ] ); } );
-  //   //   rr = rr.replace( /[A-Za-z]/g, '' );
-  //   //   T[ __c.id ] = rr;
-  //   //   Logger.INF( rr );
-  //   //   return rr;
-  //   // } );
-  // } );
-  // await sleep( 400 );
   qs( '#image_zone' ).value = '';
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
 
 const param = () => {
   LANG = qs( '#lang' ).value;
-  THRESHOLD = qs( '#bright' ).value; qs( '#bp' ).textContent = `[${ THRESHOLD }]`;
+  qs( '#bp' ).textContent = qs( '#burst' ).checked ? `ON` : `OFF`;
   SCALE = qs( '#scale' ).value; qs( '#sp' ).textContent = `[${ SCALE }]`;
   qs( '#stat' ).textContent = `言語:${ LANG } 二値化:${ THRESHOLD } 拡大倍率:${ SCALE }`;
 }
 
 qs( '#lang' ).addEventListener( 'change', param, false );
-qs( '#bright' ).addEventListener( 'change', param, false );
+qs( '#burst' ).addEventListener( 'click', param, false );
 qs( '#scale' ).addEventListener( 'change', param, false );
 
 param();
