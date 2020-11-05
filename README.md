@@ -2,7 +2,7 @@
 
 ## ローモバ時短計算機
 
-https://kawase-fx.github.io/lm-sppedup-calculator/
+ご利用はこちらから計画的に https://kawase-fx.github.io/lm-sppedup-calculator/
 
 ### 【推奨】スマホでは横画面で使ってください。
 
