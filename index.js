@@ -37,7 +37,7 @@ const CVT = {
 };
 GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
 UNITS = [ '1m', '3m', '5m', '10m', '15m', '30m', '60m', '3h', '8h', '15h', '24h', '3d', '7d', '30d' ];
-TOSEC = [ MI, MI * 3, MI * 5, MI * 10, MI * 15, MI * 30, MI, HR * 3, HR * 8, HR * 15, DY, DY * 3, DY * 7, DY * 30 ];
+TOSEC = [ MI, MI * 3, MI * 5, MI * 10, MI * 15, MI * 30, HR, HR * 3, HR * 8, HR * 15, DY, DY * 3, DY * 7, DY * 30 ];
 
 globalThis.T = {}, globalThis.S = {};
 
