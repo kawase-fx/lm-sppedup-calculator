@@ -183,6 +183,8 @@ const toCanvas = ( a, x, scale ) => {
 }
 
 const calc = () => {
+  Object.keys( S ).filter( e => !GENRES.find( f => f === e ) ).map( x => { delete S[ x ] } );
+
   Object.keys( S ).map( k => {
     let st, kt = Object.keys( S[ k ] ).filter( e => e !== '合計' );
     if( kt.length > 0 ) {
