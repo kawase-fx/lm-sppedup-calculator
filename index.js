@@ -27,14 +27,22 @@ const RECT_TABLE = [
   [ 0.1875, 0.6685, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
 ];
 
-const CVT = {
-  ' ': '', '\n': '', '。': '', '_': '', 'い': '',
-  '錦': '錬', '致': '数', '攻': '数', '呑': '間',  '問': '間', '閾': '間', 'ピードピード': 'ピード',
-  '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5', '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9', '⑩': '10',
-  '⑪': '11', '⑫': '12', '⑬': '13', '⑭': '14', '⑮': '15', '⑯': '16', '⑰': '17', '⑱': '18', '⑲': '19', '⑳': '20',
-  '切': '分', '呂': '間',
-  '所持数:': '', '.': '', ',': '', '修復': '',
-};
+const CVT = {};
+if( !localStorage.getItem( 'CVT' ) ) {
+  Object.assign( CVT, {
+    ' ': '', '\n': '', '。': '', '_': '', 'い': '',
+    '錦': '錬', '致': '数', '攻': '数', '呑': '間',  '問': '間', '閾': '間', 'ピードピード': 'ピード',
+    '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5', '⑥': '6', '⑦': '7', '⑧': '8', '⑨': '9', '⑩': '10',
+    '⑪': '11', '⑫': '12', '⑬': '13', '⑭': '14', '⑮': '15', '⑯': '16', '⑰': '17', '⑱': '18', '⑲': '19', '⑳': '20',
+    '切': '分', '呂': '間',
+    '所持数:': '', '.': '', ',': '', '修復': '',
+  } );
+  localStorage.setItem( 'CVT', JSON.stringify( CVT ) );
+} else {
+  Object.assign( CVT, JSON.parse( localStorage.getItem( 'CVT' ) ) );
+}
+
+
 GENRES = [ '汎用', '研究', '城壁', '治療', '訓練', '精製', '錬成' ];
 UNITS = [ '1m', '3m', '5m', '10m', '15m', '30m', '60m', '3h', '8h', '15h', '24h', '3d', '7d', '30d' ];
 TOSEC = [ MI, MI * 3, MI * 5, MI * 10, MI * 15, MI * 30, HR, HR * 3, HR * 8, HR * 15, DY, DY * 3, DY * 7, DY * 30 ];
@@ -43,22 +51,11 @@ globalThis.T = {}, globalThis.S = {};
 
 const tableTouch = e => {
   let parent = e.target.parentElement; let g = parent.dataset.genre, u = parent.dataset.unit;
-  if( u === '合計' ) return;
-
-  let ne = qs( '#numEdit' ), de = qs( '#dhmEdit' ), di = qs( '#directInput' );
-  ne.classList.remove( 'hidden' ); de.classList.remove( 'hidden' );
+  let ne = qs( '#numEdit' ), di = qs( '#directInput' );
+  ne.classList.remove( 'hidden' );
   qs( '#editFor #genre' ).textContent = g;
   qs( '#editFor #unit' ).textContent = u;
-  let dhm = !S[ g ] ? null : S[ g ][ u ] ? s2dhms( S[ g ][ u ].sec ) : null;
-  qs( '#de' ).value = ( dhm === null ) ? 0 : dhm.d;
-  qs( '#he' ).value = ( dhm === null ) ? 0 : dhm.h;
-  qs( '#me' ).value = ( dhm === null ) ? 0 : dhm.m;
-  if( u === '合計' ) {
-    ne.classList.add( 'hidden' );
-  } else {
-    qs( '#ne' ).value = S[ g ] ? S[ g ][ u ] ? S[ g ][ u ].nums : 0 : 0;
-    de.classList.add( 'hidden' );
-  }
+  qs( '#ne' ).value = S[ g ] ? S[ g ][ u ] ? S[ g ][ u ].nums : 0 : 0;
   di.dataset.genre = g, di.dataset.unit = u;
   di.classList.remove( 'hidden' );
 }
@@ -79,9 +76,11 @@ const editOk = e => {
   di.classList.add( 'hidden' );
   calc();
 }
+
 const editCancel = e => {
   qs( '#directInput' ).classList.add( 'hidden' );
 }
+
 const editDelete = e => {
   let di = qs( '#directInput' ); let g = di.dataset.genre, u = di.dataset.unit;
   if( confirm( '削除していいですか？' ) ) {
@@ -91,20 +90,34 @@ const editDelete = e => {
   }
 }
 
+const log2cvt = e => {
+  ta = e.target;
+  globalThis.amendKey = ta.value.slice( ta.selectionStart, ta.selectionEnd );
+  if( amendKey ) Logger.INF( `${ amendKey }を置き換える文字を表見出しから選んでください。` );
+}
+
+const onTouchHeader = e => {
+  if( !globalThis.amendKey ) return;
+  let oth = e.target.dataset.key;
+  CVT[ amendKey ] = oth; localStorage.setItem( 'CVT', JSON.stringify( CVT ) );
+  Logger.INF( `識字設定を保存しました。${ amendKey }"＝"${ oth }"` );
+}
+
 const tableRender = () => {
   let j = [ TH( { class: 'home' }, [ '種類/単位' ] ) ];
-  GENRES.map( e => { j.push( TH( { id: e }, [ e ] ) ) } );
+  GENRES.map( e => { j.push( TH( { id: e, 'data-key': e, onclick: onTouchHeader }, [ e ] ) ) } );
   let hdr = TR( { id: '列見出' }, [ j ] );
 
   let rows = UNITS.map( e => {
-    let c = [ TH( {}, [ e ] ) ];
+    let k = e.replace( /m/, '分' ).replace( /h/, '時間' ).replace( /d/, '日' );
+    let c = [ TH( { 'data-key': k, onclick: onTouchHeader }, [ e ] ) ];
     GENRES.map( row => {
       let d = S[ row ]; let v = d ? S[ row ][ e ] : null;
       let w = [
         SPAN( { id: `${ row }${ e }nums`, class: 'nums' }, [ `${ v ? v.nums : '-' }` ] ),
         SPAN( { id: `${ row }${ e }vals`, class: 'vals' }, [ `${ v ? s2dhms( v.sec ).ja : '-' }` ] ),
       ];
-      c.push( TD( { id: `${ row }${ e }`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': `${ e }` }, w ) );
+      c.push( TD( { id: `${ row }${ e }`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': `${ e }`, onclick: tableTouch }, w ) );
     } );
     return TR( { id: e }, [ c ] );
   } );
@@ -121,7 +134,7 @@ const tableRender = () => {
   } );
   ft = TR( { id: 'subtotal' }, [ ft ] );
 
-  return TABLE( { id: 'mtx', onclick: tableTouch }, [ hdr, ft, rows ] );
+  return TABLE( { id: 'mtx' }, [ hdr, ft, rows ] );
 }
 
 const sleep = msec => new Promise( resolve => setTimeout( resolve, msec ) );
@@ -288,5 +301,6 @@ qs( '#image_zone' ).addEventListener( 'change', recognize, false );
 qs( '#editOk' ).addEventListener( 'mouseup', editOk, false );
 qs( '#editCancel' ).addEventListener( 'mouseup', editCancel, false );
 qs( '#delete' ).addEventListener( 'mouseup', editDelete, false );
+qs( '#log' ).addEventListener( 'select', log2cvt, false );
 
 projector = createProjector(); projector.append( qs( '#result' ), tableRender );
