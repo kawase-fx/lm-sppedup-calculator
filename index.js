@@ -18,26 +18,26 @@ class MaquetteUtil {
 }
 MaquetteUtil.init( globalThis );
 
-let SCALE = 1, THRESHOLD = 120, LANG = 'jpn';
+let SCALE = localStorage.getItem( 'scale' ) || 1, MULTI = false, THRESHOLD = 120, LANG = localStorage.getItem( 'lang' ) || 'jpn';
 const _d = document, MI = 60, HR = MI * 60, DY = HR * 24;
 const GALLERY = qs( '#gallery' );
 
 const RECT_TABLE = () => {
   return {
     eng: [
-      [ 0.1875, 0.2785, 0.2604, 0.037 ,1 ], [ 0.098, 0.398, 0.0938, 0.037, 1 ],
-      [ 0.1875, 0.4785, 0.2604, 0.037, 2 ], [ 0.098, 0.598, 0.0938, 0.037, 2 ],
-      [ 0.1875, 0.6785, 0.2604, 0.037, 3 ], [ 0.098, 0.798, 0.0938, 0.037, 3 ]
+      [ 0.1875, 0.2785, 0.2604, 0.037, 1, 0 ], [ 0.098, 0.398, 0.0938, 0.037, 1, 1 ],
+      [ 0.1875, 0.4785, 0.2604, 0.037, 2, 0 ], [ 0.098, 0.598, 0.0938, 0.037, 2, 1 ],
+      [ 0.1875, 0.6785, 0.2604, 0.037, 3, 0 ], [ 0.098, 0.798, 0.0938, 0.037, 3, 1 ]
     ],
     jpn: [
-      [ 0.1875, 0.2704, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
-      [ 0.1875, 0.4685, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
-      [ 0.1875, 0.6685, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
+      [ 0.1875, 0.2704, 0.2604, 0.037, 1, 0 ], [ 0.1, 0.3926, 0.0938, 0.037, 1, 1 ],
+      [ 0.1875, 0.4685, 0.2604, 0.037, 2, 0 ], [ 0.1, 0.5926, 0.0938, 0.037, 2, 1 ],
+      [ 0.1875, 0.6685, 0.2604, 0.037, 3, 0 ], [ 0.1, 0.7926, 0.0938, 0.037, 3, 1 ]
     ],
     chi_tra: [
-      [ 0.1875, 0.2745, 0.2604, 0.037 ,1 ], [ 0.1, 0.3926, 0.0938, 0.037, 1 ],
-      [ 0.1875, 0.4745, 0.2604, 0.037, 2 ], [ 0.1, 0.5926, 0.0938, 0.037, 2 ],
-      [ 0.1875, 0.6745, 0.2604, 0.037, 3 ], [ 0.1, 0.7926, 0.0938, 0.037, 3 ]
+      [ 0.1875, 0.2745, 0.2604, 0.037, 1, 0 ], [ 0.1, 0.3926, 0.0938, 0.037, 1, 1 ],
+      [ 0.1875, 0.4745, 0.2604, 0.037, 2, 0 ], [ 0.1, 0.5926, 0.0938, 0.037, 2, 1 ],
+      [ 0.1875, 0.6745, 0.2604, 0.037, 3, 0 ], [ 0.1, 0.7926, 0.0938, 0.037, 3, 1 ]
     ]
   }[ LANG ];
 };
@@ -125,7 +125,7 @@ WHITELIST = () => {
     GENRES().reduce( ( a, b ) => `${ a }${ b }` ) + RL( 'repair' );
 }
 
-globalThis.T = {}, globalThis.S = {};
+globalThis.T = {}, globalThis.F = {}, globalThis.S = {};
 globalThis.recogLog = [];
 globalThis.progressValue = 0;
 globalThis.stat = RL( 'readied' );
@@ -172,33 +172,6 @@ const jnl = m => {
   cProj.renderNow();
 }
 
-const gmc = ( v, c ) => {
-  return ~~( 255 * Math.pow( v / 255, 1 / c ) );
-}
-
-const toCanvas = ( a, x, scale ) => {
-  let __c = _d.createElement( 'canvas' );
-  if( scale ) {
-    __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'hidden' ); T[ __c.id ] = {};
-  } else {
-    __c.setAttribute( 'class', 'view' );
-  }
-  GALLERY.append( __c );
-  let ctx = __c.getContext( '2d' );
-  let [ sx, sy, sw, sh ] = [ a[ 0 ] * x.width, a[ 1 ] * x.height, a[ 2 ] * x.width, a[ 3 ] * x.height ];
-  if( scale ) {
-    __c.width = sw * scale, __c.height = sh * scale; ctx.scale( scale, scale );
-  }
-  ctx.drawImage( x, sx, sy, sw, sh, 0, 0, sw, sh );
-  let src = ctx.getImageData( 0, 0, __c.width, __c.height ); let d = src.data;
-  for( let i = 0; i < d.length; i += 4 ) {
-    let gs = d[ i ] * 0.2126 + d[ i + 1 ] * 0.7152 + d[ i + 2 ] * 0.0722;
-    d[ i ] = d[ i + 1 ] = d[ i + 2 ] = gs < 128 ? 0 : gs * 1.5;
-  }
-  ctx.putImageData( src, 0, 0 );
-  return __c;
-}
-
 const calc = () => {
   Object.keys( S ).filter( e => !GENRES().find( f => f === e ) ).map( x => { delete S[ x ] } );
 
@@ -224,6 +197,32 @@ const calc = () => {
   projector.renderNow();
 }
 
+const runTesseract = async ( ctx ) => {
+  let opt = {
+    logger: jnl,
+    tessedit_char_whitelist: WHITELIST()
+  };
+  let{ data: { text } } = await Tesseract.recognize( ctx, LANG, opt );
+  Object.keys( CVT ).map( e => { text = text.split( e ).join( CVT[ e ] ); } );
+  Logger.INF( text );
+  return text;
+}
+
+recognizer = async ( rect, files ) => {
+  if( !qs( '#burst' ).checked ) {
+    for( let fi = 0; fi < files.length; fi++ ) {
+      let x = await loadImage( files[ fi ] );
+      for( let ri = 0; ri < rect.length; ri++ ) {
+        await textNormalize( rect[ ri ], x, files[ fi ] );
+      }
+    }
+  } else {
+    files.map( async f => {
+      let x = await loadImage( f ); rect.map( async ( a, i ) => textNormalize( a, x, f ) );
+    } );
+  }
+}
+
 const formatAndCalc = intervalTimerId => {
   let l = Object.keys( T ).sort( ( a, b ) => a - b );
   let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
@@ -236,21 +235,20 @@ const formatAndCalc = intervalTimerId => {
     // summarize with parse
     // TODO: i18n
     for( let si = 0; si < ts.length; si += 2 ) {
-      if( !isNaN( parseInt( ts[ si + 1 ], 10 ) ) ) continue;
+      // item count check
+      if( isNaN( parseInt( ts[ si + 1 ], 10 ) ) ) { F[ Object.keys( T )[ si + 1 ] ].error = true; continue; }
       try {
         let f = 1, kv = [], tx, tl;
         switch( LANG ) {
           case LANGS.eng:
             tx = ts[ si ].replace( /[()]/g, '' ).replace( RL( 'spdup' ), '' );
             tl = tx.indexOf( tx.match( /[0-9]+/ )[ 0 ] );
-            kv.push( tx.substr( 0, tl ) );
-            kv.push( tx.substr( tl ) );
+            kv.push( tx.substr( 0, tl ) ); kv.push( tx.substr( tl ) );
             break;
 
           case LANGS.chi_tra:
             tx = ts[ si ]; tl = tx.indexOf( tx.match( /[0-9]+/ )[ 0 ] );
-            kv.push( tx.substr( 0, tl ).replace( RL( 'spdup' ), '' ) );
-            kv.push( tx.substr( tl ) );
+            kv.push( tx.substr( 0, tl ).replace( RL( 'spdup' ), '' ) ); kv.push( tx.substr( tl ) );
             break;
 
           default:
@@ -266,46 +264,61 @@ const formatAndCalc = intervalTimerId => {
         } );
 
         if( kv[ 0 ] === '' ) kv[ 0 ] = RL( 'general' );
-        if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
-        let sc = v * f * ts[ si + 1 ];
-        S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
+        if( !GENRES().find( e => e === kv[ 0 ] ) ) {
+          F[ Object.keys( T )[ si ] ].error = true;
+          continue;
+        } else {
+          if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
+          let sc = v * f * ts[ si + 1 ];
+          S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
+        }
       } catch( e ) {
         qs( '#stat' ).textContent = e.message;
       }
     }
     calc();
     globalThis.stat = RL( 'recognitionDone' ); cProj.renderNow();
+    // error recover
+    /**
+      // generate error part list;
+      let rct = Object.keys( T ).filter( e => F[ e ].error ).map( id => F[ id ].rect );
+    */
   }
 }
 
-const textNormalize = async ( rect, img ) => {
-  let ctx = toCanvas( rect, img, SCALE );
-  let opt = {
-    logger: jnl,
-    tessedit_char_whitelist: WHITELIST()
-  };
-  let{ data: { text } } = await Tesseract.recognize( ctx, LANG, opt );
-  Object.keys( CVT ).map( e => { text = text.split( e ).join( CVT[ e ] ); } );
-  T[ ctx.id ] = text;
-  Logger.INF( text );
-  return text;
+const gmc = ( v, c ) => { return ~~( 255 * Math.pow( v / 255, 1 / c ) ); }
+
+const toCanvas = ( a, x, scale, fileObj ) => {
+  let __c = _d.createElement( 'canvas' ); __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'hidden' );
+  T[ __c.id ] = {};
+  F[ __c.id ] = { timestamp: __c.id, scale: scale, sourceFile: fileObj, row: a[ 4 ], kind: a[ 5 ], error: false, rect: a };
+
+  GALLERY.append( __c );
+  let ctx = __c.getContext( '2d' );
+  let [ sx, sy, sw, sh ] = [ a[ 0 ] * x.width, a[ 1 ] * x.height, a[ 2 ] * x.width, a[ 3 ] * x.height ];
+  if( scale ) {
+    __c.width = sw * scale, __c.height = sh * scale; ctx.scale( scale, scale );
+  }
+  ctx.drawImage( x, sx, sy, sw, sh, 0, 0, sw, sh );
+  let src = ctx.getImageData( 0, 0, __c.width, __c.height ); let d = src.data;
+  for( let i = 0; i < d.length; i += 4 ) {
+    let gs = d[ i ] * 0.2126 + d[ i + 1 ] * 0.7152 + d[ i + 2 ] * 0.0722;
+    d[ i ] = d[ i + 1 ] = d[ i + 2 ] = gs < 128 ? 0 : gs * 1.5;
+  }
+  ctx.putImageData( src, 0, 0 );
+  return __c;
+}
+
+const textNormalize = async ( rect, img, fileObj ) => {
+  let ctx = toCanvas( rect, img, SCALE, fileObj );
+  T[ ctx.id ] = await runTesseract( ctx );
+  return T[ ctx.id ];
 }
 
 const recognize = async ( e ) => {
   GALLERY.innerHTML = ''; let files = [ ... e.target.files ]; T = {};
   globalThis.startTime = Date.now();
-  if( !qs( '#burst' ).checked ) {
-    for( let fi = 0; fi < files.length; fi++ ) {
-      let x = await loadImage( files[ fi ] );
-      for( let ri = 0; ri < RECT_TABLE().length; ri++ ) {
-        await textNormalize( RECT_TABLE()[ ri ], x );
-      }
-    }
-  } else {
-    files.map( async f => {
-      let x = await loadImage( f ); RECT_TABLE().map( async ( a, i ) => textNormalize( a, x ) );
-    } );
-  }
+  recognizer( RECT_TABLE(), files );
   qs( '#image_zone' ).value = '';
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
 }
@@ -355,13 +368,16 @@ const headerRender = () => {
 }
 const param = () => {
   if( LANG !== qs( '#lang' ).value ) {
-    LANG = qs( '#lang' ).value;
+    LANG = qs( '#lang' ).value; localStorage.setItem( 'lang', LANG );
     globalThis.stat = RL( 'readied' );
     hProj.renderNow(); cProj.renderNow(); projector.renderNow();
   }
   if( SCALE !== qs( '#scale' ).value ) {
-    SCALE = qs( '#scale' ).value; cProj.renderNow();
+    SCALE = qs( '#scale' ).value; localStorage.setItem( 'scale', SCALE ); cProj.renderNow();
   };
+  if( MULTI !== qs( '#burst' ).checked ) {
+    MULTI = qs( '#burst' ).checked; localStorage.setItem( 'multi', MULTI ); cProj.renderNow();
+  }
 }
 const cpnlRender = () => {
   return DIV( { class: 'cpnl' }, [
@@ -374,12 +390,15 @@ const cpnlRender = () => {
 
     DIV( { class: 'lang ps' }, [
       LABEL( { for: 'lang' }, [ RL( 'language' ) ] ),
-      SELECT( { id:'lang', onchange: param }, Object.keys( LANGS ).map( k => OPTION( { value: k }, [ k ] ) ) )
+      SELECT( { id:'lang', onchange: param }, Object.keys( LANGS ).map( k => {
+        let oa = { value: k }; if( LANG === k ) oa.selected = '';
+        return OPTION( oa, [ k ] );
+      } ) )
     ] ),
 
     DIV( { class: 'scale ps' }, [
       LABEL( { for: 'scale' }, [ RL( 'scalingRate' ) ] ),
-      INPUT( { id: 'scale', type: 'range', min: '1', max: '10', value: '1', onchange: param }, [] ),
+      INPUT( { id: 'scale', type: 'range', min: '1', max: '10', value: `${ SCALE }`, onchange: param }, [] ),
       SPAN( { id: 'sp' }, [ `[${ SCALE }]` ] ) ] ),
 
     DIV( { class: 'burst ps' }, [
