@@ -36,8 +36,7 @@ https://kawase-fx.github.io/lm-sppedup-calculator/
 
 ![screenshot-2020-11-04_22 40 51 519](https://user-images.githubusercontent.com/29803517/98238903-71423d80-1faa-11eb-9fc9-a38c0c0ce806.png)
 
-#### わるい例 example of [BAD] picture to auto recognition.
-#### [不]好的圖片到自動識別的例子。
+#### わるい例 example of [BAD] picture to auto recognition. [不]好的圖片到自動識別的例子。
 
 ![screenshot-2020-11-05_21 05 10 564](https://user-images.githubusercontent.com/29803517/98239002-9df65500-1faa-11eb-9fcb-111e10776a4a.png)
 
@@ -52,7 +51,7 @@ https://kawase-fx.github.io/lm-sppedup-calculator/
 * 読み取り精度が悪い、スクショ面倒くさひ、などあるかと思います。ローモバに実装されないのがいけないと思います。
 * グーグルの読取処理つかわんの？＝あれは有料です。これは「無料でアプリを作る遊び」なので取り入れる機会はないです。
 
-* 現状のまま利用する限り無料です。組み入れやフォーク後の改変はお断りします。free to as is use. before contact to me embeding or fork with modify. 免費使用。 在與我聯繫之前嵌入或進行修改。
+* 現状のまま利用する限り無料です。組み入れやフォーク後の改変はお断りします。free to use in demo site. before contact to me embeding or fork with modify. 免費使用。在與我聯繫之前嵌入或進行修改。
 
 * プルリク（来るのかなｗ）歓迎。 pull request is welcome.
 
@@ -65,13 +64,10 @@ https://kawase-fx.github.io/lm-sppedup-calculator/
 
 以下のライブラリによってアプリが支えられております。ありがとうございます。
 
-Big.js 10進数計算
-https://github.com/MikeMcl/big.js#readme
+10進数計算 Big.js https://github.com/MikeMcl/big.js
 
-tesseract.js OCR
-https://github.com/naptha/tesseract.js
+OCR tesseract.js https://github.com/naptha/tesseract.js
 
-Maquette 仮想DOM
-https://github.com/AFASSoftware/maquette
+仮想DOM Maquette https://github.com/AFASSoftware/maquette
 
-many many thank you ECJ members.
+special thanks to ECJ members.
