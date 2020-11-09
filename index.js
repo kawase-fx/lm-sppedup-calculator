@@ -358,7 +358,9 @@ const param = () => {
     globalThis.stat = RL( 'readied' );
     hProj.renderNow(); cProj.renderNow(); projector.renderNow();
   }
-  SCALE = qs( '#scale' ).value;
+  if( SCALE !== qs( '#scale' ).value ) {
+    SCALE = qs( '#scale' ).value; cProj.renderNow();
+  };
 }
 const cpnlRender = () => {
   return DIV( { class: 'cpnl' }, [
