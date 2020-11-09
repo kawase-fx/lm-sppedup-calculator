@@ -236,6 +236,7 @@ const formatAndCalc = intervalTimerId => {
     // summarize with parse
     // TODO: i18n
     for( let si = 0; si < ts.length; si += 2 ) {
+      if( !isNaN( parseInt( ts[ si + 1 ], 10 ) ) ) continue;
       try {
         let f = 1, kv = [], tx, tl;
         switch( LANG ) {
