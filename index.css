@@ -9,14 +9,15 @@
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { border-radius: 3px; }
 ::-webkit-scrollbar-track { background: rgba(100,100,100, .5); }
-body { width: fit-content; background: #863; }
+body { background-image: url( 'wallpaperflare.com_wallpaper.jpg' ); }
+.container { background-color: #0003; }
 th, td { width: 5.5em; border-bottom: 1px inset #653; border-right: 1px inset #653; }
 label, th, #directInput {
   font-weight: bold; text-align: center; vertical-align: middle; background: #190;
   border: 3px solid; border-image: linear-gradient(to right bottom, #49e 0%, #05b 100%);
   border-image-slice: 1;
 }
-.cpnl { display: grid; grid-template-columns: 20em auto; grid-template-rows: 3em; border: 2px groove #a85; }
+.cpnl { display: grid; grid-template-columns: 20em auto; grid-template-rows: 3em; }
 .file { grid-column: 1 / 2; grid-row: 1 / 2; }
 .log { grid-column: 2 / 3; grid-row: 1 / 4; height: 100%; }
 .lang { grid-column: 1 / 2; grid-row: 2 / 3; }
@@ -25,10 +26,9 @@ label, th, #directInput {
 .scale { grid-column: 1 / 2; grid-row: 4 / 5; }
 .stat { grid-column: 2 / 3; grid-row: 4 / 5; }
 #log { font-size: 12pt; width: 100%; height: 100%; background: #0003; }
-#result { border: 2px groove #a85; }
 .cell .nums, .cell .vals { display: block; }
 #subtotal td { background: #fff3; }
-.file, .ps, #directInput * { border-radius: 0; border-bottom: 2px groove #a85; }
+#directInput * { border-radius: 0; border-bottom: 2px groove #a85; }
 .ps { display: grid; grid-template-columns: 6em 10em auto; }
 .file *, .ps * { margin: .2em; }
 .ps label { grid-column: 1 / 2; }
@@ -60,3 +60,4 @@ label, th, #directInput {
 
 .view { display: block; }
 .hidden { display: none !important; }
+
