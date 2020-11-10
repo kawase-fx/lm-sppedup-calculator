@@ -130,7 +130,8 @@ WHITELIST = () => {
     GENRES().reduce( ( a, b ) => `${ a }${ b }` ) + RL( 'repair' );
 }
 
-globalThis.T = {}, globalThis.F = {}, globalThis.S = {};
+let pastData = localStorage.getItem( LANG );
+globalThis.T = {}, globalThis.F = {}, globalThis.S = JSON.parse( pastData ) || {};
 globalThis.recogLog = [];
 globalThis.progressValue = 0;
 globalThis.stat = RL( 'readied' );
@@ -199,6 +200,7 @@ const calc = () => {
     } );
     S[ RL( 'general' ) ][ RL( 'total' ) ].nums = '-';
   }
+  localStorage.setItem( LANG, JSON.stringify( S ) );
   projector.renderNow();
 }
 
@@ -353,7 +355,7 @@ const tableTouch = e => {
   let ds = e.target.parentElement.dataset;
   let g = ds.genre, u = ds.unit;
   countEditor = { show: true, genre: g, unit: u, value: S[ g ] ? S[ g ][ u ] ? S[ g ][ u ].nums : 0 : 0 };
-  eProj.renderNow();
+  cProj.renderNow();
 }
 const editOk = e => {
   let c = countEditor;
@@ -364,11 +366,11 @@ const editOk = e => {
   S[ c.genre ][ c.unit ].nums = `${ qs( '#ne' ).value }`;
   S[ c.genre ][ c.unit ].sec = TOSEC[ UNITS.indexOf( c.unit ) ] * S[ c.genre ][ c.unit ].nums;
   c.show = false;
-  eProj.renderNow();
+  cProj.renderNow();
   calc();
 }
 const editCancel = e => {
-  countEditor.show = false; eProj.renderNow();
+  countEditor.show = false; cProj.renderNow();
 }
 const editDelete = e => {
   let c = countEditor;
@@ -405,10 +407,13 @@ const cpnlRender = () => {
   return DIV( { class: 'cpnl' }, [
 
     DIV( { class: 'file' }, [
-      INPUT( { id: 'image_zone', type: 'file', multiple: 'multiple', accept: 'image/*', onchange: recognize }, [] )
+      INPUT( { id: 'image_zone', type: 'file', multiple: 'multiple', accept: 'image/*', onmouseup: recognize }, [] )
     ] ),
 
-    DIV( { class: 'log' }, [ TEXTAREA( { id: 'log', onselect: log2cvt }, [] ) ] ),
+    DIV( { class: 'log' }, [
+      TEXTAREA( { id: 'log', classes: { hidden: countEditor.show }, onselect: log2cvt }, [] ),
+      editPaneRender()
+    ] ),
 
     DIV( { class: 'lang ps' }, [
       LABEL( { for: 'lang' }, [ RL( 'language' ) ] ),
@@ -451,6 +456,7 @@ const tableRender = () => {
     } );
     return TR( { id: e }, [ c ] );
   } );
+  let tbody = TBODY( {}, rows );
 
   let ft = [ TH( { id: 'colTotal' }, [ RL( 'total' ) ] ) ];
   GENRES().map( row => {
@@ -460,27 +466,24 @@ const tableRender = () => {
       SPAN( { id: `${ row }nums`, class: 'nums' }, [ `${ mt }` ] ),
       SPAN( { id: `${ row }vals`, class: 'vals' }, [ `${ st }` ] )
     ];
-    ft.push( TD( { id: `${ row }colTotal`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': RL( 'total' ) }, wt ) );
+    ft.push( TH( { id: `${ row }colTotal`, class: 'cell', 'data-genre': `${ row }`, 'data-unit': RL( 'total' ) }, wt ) );
   } );
   ft = TR( { id: 'subtotal' }, [ ft ] );
 
-  return DIV( { id: 'result' }, [ TABLE( { id: 'mtx' }, [ hdr, ft, rows ] ) ] );
+  let thead = THEAD( {}, [ hdr, ft ] );
+
+  return DIV( { id: 'result' }, [ TABLE( { id: 'mtx' }, [ thead, tbody ] ) ] );
 }
 const editPaneRender = () => {
   let c = countEditor;
   return DIV( { id: 'directInput', 'data-genre': c.genre, 'data-unit': c.unit, classes: { hidden: !c.show } }, [
-    DIV( { id: 'editFor' }, [
-      SPAN( { id: 'genre' }, [ c.genre ] ), SPAN( { id: 'unit' }, [ c.unit ] )
-    ] ),
-    DIV( { id: 'numEdit' }, [
-      LABEL( {}, [ RL( 'itemCount' ) ] ),
-      INPUT( { id: 'ne', class: 'numEdit', type: 'number', min: '0', step: '1', value: c.value }, [] )
-    ] ),
-    DIV( { id: 'editOps' }, [
-      BUTTON( { id: 'editOk', class: 'editButton', onmouseup: editOk }, [ RL( 'saveCount' ) ] ),
-      BUTTON( { id: 'editCancel', class: 'editButton', onmouseup: editCancel }, [ RL( 'cancelEdit' ) ] ),
-      BUTTON( { id: 'delete', class: 'editButton', onmouseup: editDelete }, [ RL( 'deleteCount' ) ] ),
-    ] )
+    LABEL( { id: 'genre' }, [ c.genre ] ),
+    LABEL( { id: 'unit' }, [ c.unit ] ),
+    LABEL( { id: 'cntCaption' }, [ RL( 'itemCount' ) ] ),
+    INPUT( { id: 'ne', class: 'numEdit', type: 'number', min: '0', step: '1', value: c.value }, [] ),
+    BUTTON( { id: 'editOk', class: 'editButton', onmouseup: editOk }, [ RL( 'saveCount' ) ] ),
+    BUTTON( { id: 'editCancel', class: 'editButton', onmouseup: editCancel }, [ RL( 'cancelEdit' ) ] ),
+    BUTTON( { id: 'delete', class: 'editButton', onmouseup: editDelete }, [ RL( 'deleteCount' ) ] ),
   ] );
 
 }
@@ -488,7 +491,6 @@ const editPaneRender = () => {
 hProj = createProjector(); hProj.append( qs( '.container' ), headerRender );
 cProj = createProjector(); cProj.append( qs( '.container' ), cpnlRender );
 [ ... qs( '#lang' ).options ].find( e => e.value === LANG ).selected = true;
-eProj = createProjector(); eProj.append( qs( '.container' ), editPaneRender );
 
 projector = createProjector(); projector.append( qs( '.container' ), tableRender );
 
