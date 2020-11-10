@@ -18,7 +18,10 @@ class MaquetteUtil {
 }
 MaquetteUtil.init( globalThis );
 
-let SCALE = localStorage.getItem( 'scale' ) || 1, MULTI = false, THRESHOLD = 120, LANG = localStorage.getItem( 'lang' ) || 'jpn';
+let SCALE = localStorage.getItem( 'scale' ) || 1,
+  MULTI = ( localStorage.getItem( 'multi' ) || false ) === "true",
+  THRESHOLD = 120,
+  LANG = localStorage.getItem( 'lang' ) || 'jpn';
 const _d = document, MI = 60, HR = MI * 60, DY = HR * 24;
 const GALLERY = qs( '#gallery' );
 
@@ -79,6 +82,8 @@ R = {
   m: { eng: 'm', jpn: '分', chi_tra: '分鐘' },
   h: { eng: 'h', jpn: '時間', chi_tra: '小時' },
   d: { eng: 'days', jpn: '日', chi_tra: '天' },
+  pct: { eng: '%', jpn: '%', chi_tra: '%' },
+  boots: { eng: 'Boots', jpn: 'ブーツ', chi_tra: '飛馬靴' },
   confirmDelete: { eng: 'sure?', jpn: '削除していいですか？', chi_tra: '可以刪除它嗎？' },
   edit: { eng: 'EDIT', jpn: '編集', chi_tra: '編輯' },
   choiceWordFromTableHeader: { eng: 'choose from header to replace it.', jpn: '置き換える文字を表見出しから選んでください。', chi_tra: '從表頭中選擇要替換的字符' },
@@ -92,7 +97,7 @@ R = {
   readied: { eng: 'READIED.', jpn: '画像を選ぶか直接入力してください。', chi_tra: '選擇圖片或直接輸入' },
   recognitionDone: { eng: 'DONE.', jpn: '読み取り処理を終了しました。', chi_tra: '已完成' },
   itemCount: { eng: 'Item count', jpn: '個数', chi_tra: '数量' },
-  saveCount: { eng: 'Save', jpn: '設定', chi_tra: '设置' },
+  saveCount: { eng: 'Save', jpn: '設定', chi_tra: '設置' },
   cancelEdit: { eng: 'Cancel', jpn: '戻る', chi_tra: '回去' },
   deleteCount: { eng: 'Delete', jpn: '削除', chi_tra: '删减' },
 };
@@ -208,7 +213,7 @@ const runTesseract = async ( ctx ) => {
   return text;
 }
 
-recognizer = async ( rect, files ) => {
+const recognizer = async ( rect, files ) => {
   if( !qs( '#burst' ).checked ) {
     for( let fi = 0; fi < files.length; fi++ ) {
       let x = await loadImage( files[ fi ] );
@@ -223,82 +228,100 @@ recognizer = async ( rect, files ) => {
   }
 }
 
+const autoErrorRecover = async () => {
+  let errList = Object.keys( T ).filter( e => F[ e ].error && !F[ e ].retry );
+  for( let ei = 0; ei < errList.length; ei ++ ) {
+    let eid = errList[ ei ]; let ie = F[ eid ];
+    let orgScale = SCALE;
+    SCALE = ie.scale === '10' ? '1' : `${ Number( ie.scale ) + 1 }`;
+    ie.scale = SCALE;
+    let rr = await textNormalize( ie.rect, ie.img );
+    SCALE = orgScale, T[ eid ] = rr.text, ie.retry = true; delete T[ rr.id ];
+    formatAndCalc();
+  }
+}
+
 const formatAndCalc = intervalTimerId => {
   let l = Object.keys( T ).sort( ( a, b ) => a - b );
   let s = l.length > 0 && l.filter( e => Object.keys( T[ e ] ).length === 0 ).length === 0;
   if( s ) {
-    globalThis.endTime = Date.now();
-    Logger.INF( `${ RL( 'processTime' ) }: ` + s2dhms( endTime - startTime, true ).jb );
     clearInterval( intervalTimerId );
 
     let rs = [], ts = Object.entries( T ).map( e => e[ 1 ] );
+
     // summarize with parse
-    // TODO: i18n
     for( let si = 0; si < ts.length; si += 2 ) {
       // item count check
-      if( isNaN( parseInt( ts[ si + 1 ], 10 ) ) ) { F[ Object.keys( T )[ si + 1 ] ].error = true; continue; }
-      try {
-        let f = 1, kv = [], tx, tl;
-        switch( LANG ) {
-          case LANGS.eng:
-            tx = ts[ si ].replace( /[()]/g, '' ).replace( RL( 'spdup' ), '' );
-            tl = tx.indexOf( tx.match( /[0-9]+/ )[ 0 ] );
-            kv.push( tx.substr( 0, tl ) ); kv.push( tx.substr( tl ) );
-            break;
+      let flgGU = F[ Object.keys( T )[ si ] ], flgC = F[ Object.keys( T )[ si + 1 ] ];
 
-          case LANGS.chi_tra:
-            tx = ts[ si ]; tl = tx.indexOf( tx.match( /[0-9]+/ )[ 0 ] );
-            kv.push( tx.substr( 0, tl ).replace( RL( 'spdup' ), '' ) ); kv.push( tx.substr( tl ) );
-            break;
-
-          default:
-            kv = ts[ si ].split( RL( 'spdup' ) );
-            break;
-        }
-        let v = kv[ 1 ].replace( /[^0-9]*([0-9]+)[^0-9]*/, '$1' );
-        let xp = { m: MI, h: HR, d: DY };
-        Object.keys( xp ).map( unitName => {
-          if( kv[ 1 ].indexOf( RL( unitName ) ) > -1 ) {
-            f *= xp[ unitName ]; kv[ 1 ] = `${ v }${ unitName }`;
-          }
-        } );
-
-        if( kv[ 0 ] === '' ) kv[ 0 ] = RL( 'general' );
-        if( !GENRES().find( e => e === kv[ 0 ] ) ) {
-          F[ Object.keys( T )[ si ] ].error = true;
-          continue;
-        } else {
-          if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
-          let sc = v * f * ts[ si + 1 ];
-          S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
-        }
-      } catch( e ) {
-        qs( '#stat' ).textContent = e.message;
+      if( isNaN( parseInt( ts[ si + 1 ], 10 ) ) ) {
+        flgC.error = true; flgC.retry = false; continue;
       }
+      let f = 1, kv = [], tx, tl, mt;
+      switch( LANG ) {
+        case LANGS.eng:
+          tx = ts[ si ].replace( /[()]/g, '' ).replace( RL( 'spdup' ), '' );
+          mt = tx.match( /[0-9]+/ );
+          if( !mt ) {
+            flgGU.error = true; flgGU.retry = false; continue;
+          }
+          tl = tx.indexOf( mt[ 0 ] );
+          kv.push( tx.substr( 0, tl ) ); kv.push( tx.substr( tl ) );
+          break;
+
+        default:
+        // case LANGS.chi_tra:
+          tx = ts[ si ];
+          mt = tx.match( /[0-9]+/ );
+          if( !mt ) {
+            flgGU.error = true; flgGU.retry = false; continue;
+          }
+          tl = tx.indexOf( mt[ 0 ] );
+          kv.push( tx.substr( 0, tl ).replace( RL( 'spdup' ), '' ) ); kv.push( tx.substr( tl ) );
+          break;
+
+        // default:
+        //   kv = ts[ si ].split( RL( 'spdup' ) );
+        //   break;
+      }
+      let v = kv[ 1 ].replace( /[^0-9]*([0-9]+)[^0-9]*/, '$1' );
+      let xp = { m: MI, h: HR, d: DY };
+      Object.keys( xp ).map( unitName => {
+        if( kv[ 1 ].indexOf( RL( unitName ) ) > -1 ) {
+          f *= xp[ unitName ]; kv[ 1 ] = `${ v }${ unitName }`;
+        }
+      } );
+
+      if( kv[ 0 ] === '' ) kv[ 0 ] = RL( 'general' );
+      let excludePattern = kv[ 1 ].indexOf( RL( 'pct' ) ) > -1 || kv[ 0 ].indexOf( RL( 'boots' ) ) > -1;
+      if( !GENRES().find( e => e === kv[ 0 ] ) && !excludePattern ) {
+        flgGU.error = true; flgGU.retry = false; continue;
+      }
+      if( !UNITS.find( e => e === kv[ 1 ] ) && !excludePattern ) {
+        flgGU.error = true; flgGU.retry = false; continue;
+      }
+      if( !S[ kv[ 0 ] ] ) S[ kv[ 0 ] ] = {};
+      let sc = v * f * ts[ si + 1 ];
+      S[ kv[ 0 ] ][ kv[ 1 ] ] = { sec: sc, nums: ts[ si + 1 ] };
     }
+    autoErrorRecover();
     calc();
     globalThis.stat = RL( 'recognitionDone' ); cProj.renderNow();
-    // error recover
-    /**
-      // generate error part list;
-      let rct = Object.keys( T ).filter( e => F[ e ].error ).map( id => F[ id ].rect );
-    */
+
   }
 }
 
 const gmc = ( v, c ) => { return ~~( 255 * Math.pow( v / 255, 1 / c ) ); }
 
-const toCanvas = ( a, x, scale, fileObj ) => {
+const toCanvas = ( a, x ) => {
   let __c = _d.createElement( 'canvas' ); __c.id = `${ Date.now() }`; __c.setAttribute( 'class', 'hidden' );
   T[ __c.id ] = {};
-  F[ __c.id ] = { timestamp: __c.id, scale: scale, sourceFile: fileObj, row: a[ 4 ], kind: a[ 5 ], error: false, rect: a };
+  F[ __c.id ] = { scale: SCALE, img: x, row: a[ 4 ], kind: a[ 5 ], retry: false, error: false, rect: a };
 
   GALLERY.append( __c );
   let ctx = __c.getContext( '2d' );
   let [ sx, sy, sw, sh ] = [ a[ 0 ] * x.width, a[ 1 ] * x.height, a[ 2 ] * x.width, a[ 3 ] * x.height ];
-  if( scale ) {
-    __c.width = sw * scale, __c.height = sh * scale; ctx.scale( scale, scale );
-  }
+  __c.width = sw * SCALE, __c.height = sh * SCALE; ctx.scale( SCALE, SCALE );
   ctx.drawImage( x, sx, sy, sw, sh, 0, 0, sw, sh );
   let src = ctx.getImageData( 0, 0, __c.width, __c.height ); let d = src.data;
   for( let i = 0; i < d.length; i += 4 ) {
@@ -309,15 +332,14 @@ const toCanvas = ( a, x, scale, fileObj ) => {
   return __c;
 }
 
-const textNormalize = async ( rect, img, fileObj ) => {
-  let ctx = toCanvas( rect, img, SCALE, fileObj );
+const textNormalize = async ( rect, img ) => {
+  let ctx = toCanvas( rect, img, SCALE );
   T[ ctx.id ] = await runTesseract( ctx );
-  return T[ ctx.id ];
+  return { id: ctx.id, text: T[ ctx.id ] };
 }
 
 const recognize = async ( e ) => {
   GALLERY.innerHTML = ''; let files = [ ... e.target.files ]; T = {};
-  globalThis.startTime = Date.now();
   recognizer( RECT_TABLE(), files );
   qs( '#image_zone' ).value = '';
   let mj = setInterval( () => { formatAndCalc( mj ); }, 100 );
@@ -396,15 +418,15 @@ const cpnlRender = () => {
       } ) )
     ] ),
 
+    DIV( { class: 'burst ps' }, [
+      LABEL( { for: 'burst' }, [ RL( 'multiWork' ) ] ),
+      INPUT( { id: 'burst', type: 'checkbox', checked: MULTI, onclick: param }, [] ),
+      SPAN( { id: 'bp' }, [ MULTI ? `ON` : `OFF` ] ) ] ),
+
     DIV( { class: 'scale ps' }, [
       LABEL( { for: 'scale' }, [ RL( 'scalingRate' ) ] ),
       INPUT( { id: 'scale', type: 'range', min: '1', max: '10', value: `${ SCALE }`, onchange: param }, [] ),
       SPAN( { id: 'sp' }, [ `[${ SCALE }]` ] ) ] ),
-
-    DIV( { class: 'burst ps' }, [
-      LABEL( { for: 'burst' }, [ RL( 'multiWork' ) ] ),
-      INPUT( { id: 'burst', type: 'checkbox', onclick: param }, [] ),
-      SPAN( { id: 'bp' }, [ qs( '#burst' )?.checked ? `ON` : `OFF` ] ) ] ),
 
     DIV( { class: 'stat vs' }, [
       SPAN( { id: 'stat' }, [ stat ] ), PROGRESS( { id: 'p', value: progressValue, max: '100' }, [] )
@@ -469,3 +491,5 @@ cProj = createProjector(); cProj.append( qs( '.container' ), cpnlRender );
 eProj = createProjector(); eProj.append( qs( '.container' ), editPaneRender );
 
 projector = createProjector(); projector.append( qs( '.container' ), tableRender );
+
+qs( '#image_zone' ).focus();
